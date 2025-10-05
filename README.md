@@ -43,7 +43,7 @@ An OpenAPI 3.0-based MCP (Model Context Protocol) server that provides structure
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/pimpmypixel/immich-mcp-server.git
 cd immich-mcp-server
 ```
 
@@ -105,14 +105,16 @@ npm start
 
 ### Claude Desktop
 
-Add to your Claude Desktop configuration:
+You have **three options** for configuring Claude Desktop with the Immich MCP Server:
+
+#### Option 1: Direct Node.js Execution (Recommended for Development)
 
 ```json
 {
   "mcpServers": {
     "immich": {
       "command": "node",
-      "args": ["/path/to/immich-mcp-server/dist/index.js"],
+      "args": ["/Users/andreas/Herd/ImmichMcpServer/dist/index.js"],
       "env": {
         "IMMICH_API_KEY": "your_api_key",
         "IMMICH_INSTANCE_URL": "https://your-immich-instance.com"
@@ -121,6 +123,170 @@ Add to your Claude Desktop configuration:
   }
 }
 ```
+
+#### Option 2: Using npm start (Easiest)
+
+```json
+{
+  "mcpServers": {
+    "immich": {
+      "command": "npm",
+      "args": ["start"],
+      "cwd": "/Users/andreas/Herd/ImmichMcpServer",
+      "env": {
+        "IMMICH_API_KEY": "your_api_key",
+        "IMMICH_INSTANCE_URL": "https://your-immich-instance.com"
+      }
+    }
+  }
+}
+```
+
+#### Option 3: Using Docker Container (Recommended for Production)
+
+```json
+{
+  "mcpServers": {
+    "immich": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--env", "IMMICH_API_KEY=your_api_key",
+        "--env", "IMMICH_INSTANCE_URL=https://your-immich-instance.com",
+        "immich-mcp-server:latest"
+      ]
+    }
+  }
+}
+```
+
+**Or with .env file:**
+```json
+{
+  "mcpServers": {
+    "immich": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--env-file", "/Users/andreas/Herd/ImmichMcpServer/.env",
+        "immich-mcp-server:latest"
+      ]
+    }
+  }
+}
+```
+
+### Which Option Should You Choose?
+
+- **Option 1 (Direct Node.js)**: Best for development, debugging, and when you want direct control
+- **Option 2 (npm start)**: Easiest to set up, handles dependencies automatically
+- **Option 3 (Docker)**: Best for production, isolated environment, consistent deployment
+
+## Setting Up Claude Desktop with Option 2 (Recommended)
+
+### Step 1: Prepare Your MCP Server
+
+1. **Ensure the project is built**:
+```bash
+cd /Users/andreas/Herd/ImmichMcpServer
+npm run build
+```
+
+2. **Test the server works**:
+```bash
+npm start
+# You should see: "Immich MCP Server started successfully"
+# Press Ctrl+C to stop
+```
+
+### Step 2: Configure Claude Desktop
+
+1. **Find Claude Desktop configuration file**:
+   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+   - **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+2. **Create or edit the configuration file**:
+
+If the file doesn't exist, create it with this content:
+```json
+{
+  "mcpServers": {
+    "immich": {
+      "command": "npm",
+      "args": ["start"],
+      "cwd": "/Users/andreas/Herd/ImmichMcpServer",
+      "env": {
+        "IMMICH_API_KEY": "mW4yJAPw92hhNlSI4cJcTeSK3aaZTNAP5qhgT0yJsg",
+        "IMMICH_INSTANCE_URL": "https://photos.spoons.dk"
+      }
+    }
+  }
+}
+```
+
+If the file already exists, add the `immich` server to the existing `mcpServers` object:
+```json
+{
+  "mcpServers": {
+    "existing-server": {
+      "command": "...",
+      "args": ["..."]
+    },
+    "immich": {
+      "command": "npm",
+      "args": ["start"],
+      "cwd": "/Users/andreas/Herd/ImmichMcpServer",
+      "env": {
+        "IMMICH_API_KEY": "mW4yJAPw92hhNlSI4cJcTeSK3aaZTNAP5qhgT0yJsg",
+        "IMMICH_INSTANCE_URL": "https://photos.spoons.dk"
+      }
+    }
+  }
+}
+```
+
+### Step 3: Restart Claude Desktop
+
+1. **Quit Claude Desktop completely**
+2. **Relaunch Claude Desktop**
+3. **Verify connection**: Look for MCP server indicators in Claude Desktop
+
+### Step 4: Test the Integration
+
+In Claude Desktop, try these commands:
+- "List my Immich albums"
+- "Show me server information" 
+- "Search for photos with 'beach'"
+
+### Troubleshooting
+
+**If Claude Desktop doesn't connect:**
+
+1. **Check the configuration file syntax** (use a JSON validator)
+2. **Verify the path**: Make sure `/Users/andreas/Herd/ImmichMcpServer` is correct
+3. **Test manually**:
+   ```bash
+   cd /Users/andreas/Herd/ImmichMcpServer
+   npm start
+   ```
+4. **Check Claude Desktop logs** (if available in the app)
+5. **Try with environment variables in .env file instead**:
+   ```json
+   {
+     "mcpServers": {
+       "immich": {
+         "command": "npm",
+         "args": ["start"],
+         "cwd": "/Users/andreas/Herd/ImmichMcpServer"
+       }
+     }
+   }
+   ```
 
 ### Other MCP Clients
 

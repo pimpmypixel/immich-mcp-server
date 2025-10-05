@@ -11,12 +11,13 @@
 7. **DO NOT** initialize with README, .gitignore, or license (we already have these)
 8. Click "Create repository"
 
-## Step 2: Update Remote URL
+## Step 2: Remote URL Already Set
 
-After creating the repository, replace `yourusername` with your actual GitHub username:
+The remote URL is already configured for your GitHub username:
 
 ```bash
-git remote set-url origin https://github.com/YOUR_USERNAME/immich-mcp-server.git
+# Already configured:
+# git remote set-url origin https://github.com/pimpmypixel/immich-mcp-server.git
 ```
 
 ## Step 3: Push to GitHub
@@ -46,7 +47,7 @@ gh repo create immich-mcp-server --public --source=. --remote=origin --push
 ## After Push Success
 
 Your repository will be available at:
-`https://github.com/YOUR_USERNAME/immich-mcp-server`
+`https://github.com/pimpmypixel/immich-mcp-server`
 
 You can then:
 1. Add repository topics/tags on GitHub
