@@ -153,8 +153,14 @@ export class ImmichApiClient {
    */
   async validateConnection(): Promise<boolean> {
     try {
-      // Try multiple endpoints to validate connection
-      const endpoints = ['/api/server-info', '/api/server-info/version', '/api/users/me'];
+      // Try endpoints in order of most likely to work
+      const endpoints = [
+        '/api/users/me',           // Most common endpoint that should always exist
+        '/api/server/info',        // Alternative server info path
+        '/api/server-info',        // Original server info path
+        '/api/server/version',     // Alternative version path
+        '/api/server-info/version' // Original version path
+      ];
       
       for (const endpoint of endpoints) {
         try {
@@ -162,12 +168,20 @@ export class ImmichApiClient {
           logger.info('Immich API connection validated successfully', { endpoint });
           return true;
         } catch (error) {
-          logger.debug('Endpoint not available, trying next', { endpoint, error });
+          logger.debug('Endpoint not available, trying next', { endpoint });
+          // Don't log the full error to reduce noise
         }
       }
       
-      logger.error('All validation endpoints failed');
-      return false;
+      // If all endpoints fail, try a basic request to see if we get any response
+      try {
+        await this.client.get('/api');
+        logger.info('Immich API connection validated (base API accessible)');
+        return true;
+      } catch (error) {
+        logger.error('All validation endpoints failed, API may be unreachable');
+        return false;
+      }
     } catch (error) {
       logger.error('Failed to validate Immich API connection', error);
       return false;

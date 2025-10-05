@@ -95,16 +95,39 @@ export class ServerTool {
     }
   }
 
-  private static async getServerInfo(args: any): Promise<ServerInfo> {
+  private static async getServerInfo(args: any): Promise<any> {
     const input = GetServerInfoInputSchema.parse(args);
-    return await immichApi.get<ServerInfo>('/api/server-info');
+    
+    // Try multiple server info endpoints
+    const endpoints = ['/api/server/info', '/api/server-info', '/api/system/info'];
+    
+    for (const endpoint of endpoints) {
+      try {
+        return await immichApi.get(endpoint);
+      } catch (error) {
+        logger.debug(`Server info endpoint ${endpoint} not available`);
+      }
+    }
+    
+    throw new Error('No server info endpoint available');
   }
 
   private static async getServerVersion(args: any): Promise<any> {
-    return await immichApi.get('/api/server-info/version');
+    // Try multiple version endpoints
+    const endpoints = ['/api/server/version', '/api/server-info/version', '/api/system/version'];
+    
+    for (const endpoint of endpoints) {
+      try {
+        return await immichApi.get(endpoint);
+      } catch (error) {
+        logger.debug(`Server version endpoint ${endpoint} not available`);
+      }
+    }
+    
+    throw new Error('No server version endpoint available');
   }
 
-  private static async getServerStats(args: any): Promise<ServerStats> {
+  private static async getServerStats(args: any): Promise<any> {
     const input = GetServerStatsInputSchema.parse(args);
     
     const params: Record<string, any> = {};
@@ -112,37 +135,77 @@ export class ServerTool {
       params.isAll = input.isAll;
     }
 
-    return await immichApi.get<ServerStats>('/api/server-info/statistics', params);
+    // Try multiple statistics endpoints
+    const endpoints = ['/api/server/statistics', '/api/server-info/statistics', '/api/system/stats'];
+    
+    for (const endpoint of endpoints) {
+      try {
+        return await immichApi.get(endpoint, params);
+      } catch (error) {
+        logger.debug(`Server stats endpoint ${endpoint} not available`);
+      }
+    }
+    
+    throw new Error('No server statistics endpoint available');
   }
 
-  private static async pingServer(args: any): Promise<{ status: string; responseTime: number; timestamp: string }> {
+  private static async pingServer(args: any): Promise<{ status: string; responseTime: number; timestamp: string; endpoint?: string }> {
     const startTime = Date.now();
     
-    try {
-      await immichApi.get('/api/server-info/ping', undefined, false);
-      const responseTime = Date.now() - startTime;
-      
-      return {
-        status: 'ok',
-        responseTime,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      const responseTime = Date.now() - startTime;
-      
-      return {
-        status: 'error',
-        responseTime,
-        timestamp: new Date().toISOString(),
-      };
+    // Try multiple ping endpoints
+    const endpoints = ['/api/users/me', '/api/server/ping', '/api/server-info/ping', '/api/system/ping'];
+    
+    for (const endpoint of endpoints) {
+      try {
+        await immichApi.get(endpoint, undefined, false);
+        const responseTime = Date.now() - startTime;
+        
+        return {
+          status: 'ok',
+          responseTime,
+          timestamp: new Date().toISOString(),
+          endpoint,
+        };
+      } catch (error) {
+        logger.debug(`Ping endpoint ${endpoint} not available`);
+      }
     }
+    
+    const responseTime = Date.now() - startTime;
+    return {
+      status: 'error',
+      responseTime,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   private static async getServerConfig(args: any): Promise<any> {
-    return await immichApi.get('/api/server-info/config');
+    // Try multiple config endpoints
+    const endpoints = ['/api/server/config', '/api/server-info/config', '/api/system/config'];
+    
+    for (const endpoint of endpoints) {
+      try {
+        return await immichApi.get(endpoint);
+      } catch (error) {
+        logger.debug(`Server config endpoint ${endpoint} not available`);
+      }
+    }
+    
+    throw new Error('No server config endpoint available');
   }
 
   private static async getServerFeatures(args: any): Promise<any> {
-    return await immichApi.get('/api/server-info/features');
+    // Try multiple features endpoints
+    const endpoints = ['/api/server/features', '/api/server-info/features', '/api/system/features'];
+    
+    for (const endpoint of endpoints) {
+      try {
+        return await immichApi.get(endpoint);
+      } catch (error) {
+        logger.debug(`Server features endpoint ${endpoint} not available`);
+      }
+    }
+    
+    throw new Error('No server features endpoint available');
   }
 }
