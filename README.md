@@ -114,7 +114,7 @@ You have **three options** for configuring Claude Desktop with the Immich MCP Se
   "mcpServers": {
     "immich": {
       "command": "node",
-      "args": ["/Users/andreas/Herd/ImmichMcpServer/dist/index.js"],
+      "args": ["~/ImmichMcpServer/dist/index.js"],
       "env": {
         "IMMICH_API_KEY": "your_api_key",
         "IMMICH_INSTANCE_URL": "https://your-immich-instance.com"
@@ -132,7 +132,7 @@ You have **three options** for configuring Claude Desktop with the Immich MCP Se
     "immich": {
       "command": "npm",
       "args": ["start"],
-      "cwd": "/Users/andreas/Herd/ImmichMcpServer",
+      "cwd": "~/ImmichMcpServer",
       "env": {
         "IMMICH_API_KEY": "your_api_key",
         "IMMICH_INSTANCE_URL": "https://your-immich-instance.com"
@@ -172,7 +172,7 @@ You have **three options** for configuring Claude Desktop with the Immich MCP Se
         "run",
         "--rm",
         "-i",
-        "--env-file", "/Users/andreas/Herd/ImmichMcpServer/.env",
+        "--env-file", "~/ImmichMcpServer/.env",
         "immich-mcp-server:latest"
       ]
     }
@@ -219,10 +219,10 @@ If the file doesn't exist, create it with this content:
     "immich": {
       "command": "npm",
       "args": ["start"],
-      "cwd": "/Users/andreas/Herd/ImmichMcpServer",
+      "cwd": "~/ImmichMcpServer",
       "env": {
-        "IMMICH_API_KEY": "mW4yJAPw92hhNlSI4cJcTeSK3aaZTNAP5qhgT0yJsg",
-        "IMMICH_INSTANCE_URL": "https://photos.spoons.dk"
+        "IMMICH_API_KEY": "KEY",
+        "IMMICH_INSTANCE_URL": "https://<URL>"
       }
     }
   }
@@ -240,10 +240,10 @@ If the file already exists, add the `immich` server to the existing `mcpServers`
     "immich": {
       "command": "npm",
       "args": ["start"],
-      "cwd": "/Users/andreas/Herd/ImmichMcpServer",
+      "cwd": "~/ImmichMcpServer",
       "env": {
-        "IMMICH_API_KEY": "mW4yJAPw92hhNlSI4cJcTeSK3aaZTNAP5qhgT0yJsg",
-        "IMMICH_INSTANCE_URL": "https://photos.spoons.dk"
+        "IMMICH_API_KEY": "KEY",
+        "IMMICH_INSTANCE_URL": "https://<URL>"
       }
     }
   }
@@ -271,7 +271,7 @@ In Claude Desktop, try these commands:
 2. **Verify the path**: Make sure `/Users/andreas/Herd/ImmichMcpServer` is correct
 3. **Test manually**:
    ```bash
-   cd /Users/andreas/Herd/ImmichMcpServer
+   cd ~/ImmichMcpServer
    npm start
    ```
 4. **Check Claude Desktop logs** (if available in the app)
@@ -282,7 +282,7 @@ In Claude Desktop, try these commands:
        "immich": {
          "command": "npm",
          "args": ["start"],
-         "cwd": "/Users/andreas/Herd/ImmichMcpServer"
+         "cwd": "~/ImmichMcpServer"
        }
      }
    }
