@@ -1,5 +1,6 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -164,19 +165,84 @@ export class ImmichMcpServer {
     const isConnected = await immichApi.validateConnection();
     
     if (!isConnected) {
-      logger.error('Failed to connect to Immich API. Please check your configuration.');
-      process.exit(1);
+      logger.warn('Failed to connect to Immich API. Server will start but tools may not work.');
     }
 
-    // Create and start transport
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
-    
-    logger.info('Immich MCP Server started successfully', {
-      immichUrl: config.IMMICH_INSTANCE_URL,
-      logLevel: config.LOG_LEVEL,
-      cacheTtl: config.CACHE_TTL,
-    });
+    // Use HTTP transport if PORT is set, otherwise stdio
+    if (process.env.PORT) {
+      const { createServer } = await import('http');
+      const transports: Record<string, StreamableHTTPServerTransport> = {};
+      
+      const httpServer = createServer(async (req, res) => {
+        const sessionId = req.headers['mcp-session-id'] as string | undefined;
+        
+        if (req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => body += chunk);
+          req.on('end', async () => {
+            const parsedBody = body.trim() ? JSON.parse(body) : undefined;
+            
+            let transport: StreamableHTTPServerTransport;
+            if (sessionId && transports[sessionId]) {
+              transport = transports[sessionId];
+            } else if (!sessionId) {
+              transport = new StreamableHTTPServerTransport({
+                sessionIdGenerator: () => crypto.randomUUID(),
+                onsessioninitialized: (sid) => {
+                  transports[sid] = transport;
+                  logger.debug('Session initialized', { sessionId: sid });
+                },
+                onsessionclosed: (sid) => {
+                  delete transports[sid];
+                  logger.debug('Session closed', { sessionId: sid });
+                }
+              });
+              await this.server.connect(transport);
+            } else {
+              res.writeHead(400);
+              res.end('Invalid session ID');
+              return;
+            }
+            
+            await transport.handleRequest(req, res, parsedBody);
+          });
+        } else if (req.method === 'GET') {
+          if (!sessionId || !transports[sessionId]) {
+            res.writeHead(400);
+            res.end('Invalid or missing session ID');
+            return;
+          }
+          await transports[sessionId].handleRequest(req, res);
+        } else if (req.method === 'DELETE') {
+          if (!sessionId || !transports[sessionId]) {
+            res.writeHead(400);
+            res.end('Invalid or missing session ID');
+            return;
+          }
+          await transports[sessionId].handleRequest(req, res);
+        } else {
+          res.writeHead(405);
+          res.end('Method not allowed');
+        }
+      });
+      httpServer.listen(config.PORT, () => {
+        logger.info('Immich MCP Server started with HTTP transport', {
+          port: config.PORT,
+          immichUrl: config.IMMICH_INSTANCE_URL,
+          logLevel: config.LOG_LEVEL,
+          cacheTtl: config.CACHE_TTL,
+        });
+      });
+    } else {
+      const transport = new StdioServerTransport();
+      await this.server.connect(transport);
+      
+      logger.info('Immich MCP Server started with stdio transport', {
+        immichUrl: config.IMMICH_INSTANCE_URL,
+        logLevel: config.LOG_LEVEL,
+        cacheTtl: config.CACHE_TTL,
+      });
+    }
   }
 
   async stop(): Promise<void> {
