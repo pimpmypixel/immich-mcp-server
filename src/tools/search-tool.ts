@@ -197,6 +197,36 @@ export class SearchTool {
           },
         },
       },
+      {
+        name: 'search_by_person',
+        description: 'Search for photos by person ID and/or name.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            personId: {
+              type: 'string',
+              description: 'ID of the person to search for',
+            },
+            personName: {
+              type: 'string',
+              description: 'Name of the person to search for',
+            },
+            page: {
+              type: 'number',
+              minimum: 1,
+              default: 1,
+              description: 'Page number for pagination',
+            },
+            size: {
+              type: 'number',
+              minimum: 1,
+              maximum: 1000,
+              default: 250,
+              description: 'Number of results per page',
+            },
+          },
+        },
+      },
     ];
   }
 
@@ -213,6 +243,8 @@ export class SearchTool {
           return await this.metadataSearch(args);
         case 'search_explore':
           return await this.exploreSearch(args);
+        case 'search_by_person':
+          return await this.searchByPerson(args);
         default:
           throw new Error(`Unknown search tool: ${name}`);
       }
@@ -286,5 +318,38 @@ export class SearchTool {
     // This endpoint structure may vary depending on Immich version
     // Implementing as a general explore endpoint
     return await immichApi.get('/api/search/explore', args);
+  }
+
+  private static async searchByPerson(args: any): Promise<any> {
+    const { personId, personName, page = 1, size = 250 } = args;
+    
+    let personIds: string[] = [];
+    
+    // If personName is provided, search for the person first
+    if (personName) {
+      const searchResults = await immichApi.get('/api/search/person', { name: personName });
+      if (searchResults && Array.isArray(searchResults)) {
+        personIds = searchResults.map((person: any) => person.id);
+      }
+    }
+    
+    // If personId is provided, add it to the list
+    if (personId) {
+      personIds.push(personId);
+    }
+    
+    // If no person IDs found, return empty result
+    if (personIds.length === 0) {
+      return { assets: { items: [], total: 0, count: 0, facets: [], nextPage: null } };
+    }
+    
+    // Search for assets with these person IDs
+    const body = {
+      personIds,
+      page,
+      size,
+    };
+    
+    return await immichApi.post('/api/search/metadata', body);
   }
 }
